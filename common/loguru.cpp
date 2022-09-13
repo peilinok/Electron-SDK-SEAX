@@ -1963,12 +1963,12 @@ namespace loguru
 			char preamble_buff[LOGURU_PREAMBLE_WIDTH];
 			print_preamble(preamble_buff, sizeof(preamble_buff), Verbosity_FATAL, "", 0);
 			auto message = Message{Verbosity_FATAL, "", 0, preamble_buff, "", "Signal: ", signal_name};
-			try {
+			// try {
 				log_message(1, message, false, false);
-			} catch (...) {
+			// } catch (...) {
 				// This can happed due to s_fatal_handler.
-				write_to_stderr("Exception caught and ignored by Loguru signal handler.\n");
-			}
+				// write_to_stderr("Exception caught and ignored by Loguru signal handler.\n");
+			// }
 			flush();
 
 			// --------------------------------------------------------------------

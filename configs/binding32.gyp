@@ -169,7 +169,8 @@
                     './common/libyuv/source/compare_gcc.cc',
                     './common/libyuv/source/rotate_gcc.cc',
                     './common/libyuv/source/row_gcc.cc',
-                    './common/libyuv/source/scale_gcc.cc'
+                    './common/libyuv/source/scale_gcc.cc',
+                    './video_source/main_mac.mm'
                 ],
                 'defines!': [
                 '_HAS_EXCEPTIONS=0',

@@ -169,7 +169,8 @@
                     './common/libyuv/source/compare_gcc.cc',
                     './common/libyuv/source/rotate_gcc.cc',
                     './common/libyuv/source/row_gcc.cc',
-                    './common/libyuv/source/scale_gcc.cc'
+                    './common/libyuv/source/scale_gcc.cc',
+                    './video_source/main_mac.mm'
                 ],
                 'defines!': [
                 '_HAS_EXCEPTIONS=0',
@@ -357,7 +358,7 @@
                         './sdk/lib/mac/AgoraSoundTouch.framework',
                         './sdk/lib/mac/AgoraCore.framework',
                         './sdk/lib/mac/av1.framework',
-                        './sdk/lib/mac/AgoraAIDenoiseExtension.framework'
+                        './sdk/lib/mac/AgoraAIDenoiseExtension.framework',
                         './sdk/lib/mac/AgoraVideoProcessExtension.framework',
                     ]
                 }],
