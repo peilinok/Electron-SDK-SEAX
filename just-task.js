@@ -149,7 +149,7 @@ task('install', () => {
   } else {
     return new Promise((resolve, reject) => {
       switcharch({
-        arch: argv().arch,
+        arch: config.arch,
         // platform: 'win32',
       })
       // .then(() => {
@@ -167,7 +167,8 @@ task('install', () => {
         return build(Object.assign({}, config, {
           packageVersion: addonVersion
         }))
-      }).then(() => {
+      })
+      .then(() => {
         resolve()
       }).catch(e => {
         reject(e)

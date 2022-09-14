@@ -16,7 +16,7 @@ module.exports.getArgvFromNpmEnv = () => {
 }
 
 module.exports.getArgvFromPkgJson = () => {
-  const projectDir = path.join(process.env.INIT_CWD, 'package.json')
+  const projectDir = path.join(process.env.INIT_CWD, 'package.json');
   const pkgMeta = require(projectDir);
   if (pkgMeta.agora_electron) {
     let config = {
