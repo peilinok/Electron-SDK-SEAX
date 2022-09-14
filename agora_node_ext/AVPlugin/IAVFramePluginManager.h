@@ -30,6 +30,7 @@ class IAVFramePluginManager : public agora::media::IVideoFrameObserver,
   virtual bool onCaptureVideoFrame(VideoFrame& videoFrame);
   virtual bool onRenderVideoFrame(unsigned int uid, VideoFrame& videoFrame);
 
+  virtual bool onRecordAudioFrameBeforeProcessed(AudioFrame& audioFrame);
   virtual bool onRecordAudioFrame(AudioFrame& audioFrame);
   virtual bool onPlaybackAudioFrame(AudioFrame& audioFrame);
   virtual bool onMixedAudioFrame(AudioFrame& audioFrame);

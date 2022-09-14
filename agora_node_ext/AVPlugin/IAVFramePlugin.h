@@ -68,6 +68,8 @@ class IAVFramePluginCallback {
   virtual bool onPluginRenderVideoFrame(unsigned int uid,
                                         VideoPluginFrame* videoFrame) = 0;
 
+  virtual bool onPluginRecordAudioFrameBeforeProcessed(
+      AudioPluginFrame* audioFrame) = 0;
   virtual bool onPluginRecordAudioFrame(AudioPluginFrame* audioFrame) = 0;
   virtual bool onPluginPlaybackAudioFrame(AudioPluginFrame* audioFrame) = 0;
   virtual bool onPluginMixedAudioFrame(AudioPluginFrame* audioFrame) = 0;

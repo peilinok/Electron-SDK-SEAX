@@ -28,6 +28,17 @@ bool IAVFramePluginManager::onRenderVideoFrame(unsigned int uid,
   return true;
 }
 
+bool IAVFramePluginManager::onRecordAudioFrameBeforeProcessed(
+    AudioFrame& audioFrame) {
+  for (auto const& element : m_mapPlugins) {
+    if (element.second.enabled) {
+      element.second.instance->onPluginRecordAudioFrameBeforeProcessed(
+          (AudioPluginFrame*)&audioFrame);
+    }
+  }
+  return true;
+}
+
 bool IAVFramePluginManager::onRecordAudioFrame(AudioFrame& audioFrame) {
   for (auto const& element : m_mapPlugins) {
     if (element.second.enabled) {
