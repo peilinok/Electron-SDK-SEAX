@@ -67,7 +67,7 @@
             'OS=="win"',
             {
                 'library_dirs': [
-                './sdk/lib',
+                  './sdk/lib/win/x64/lib',
                 ],
                 'link_settings': {
                     'libraries': [
@@ -269,27 +269,27 @@
                 'copies': [{
                     'destination': '<(PRODUCT_DIR)',
                     'files': [
-                        './sdk/dll/agora_rtc_sdk.dll',
-                        './sdk/dll/av1.dll',
-                        './sdk/dll/libagora-core.dll',
-                        './sdk/dll/libagora-ffmpeg.dll',
-                        './sdk/dll/libagora-soundtouch.dll',
-                        './sdk/dll/libagora-wgc.dll',
-                        './sdk/dll/libagora_ai_denoise_extension.dll',
-                        './sdk/dll/libagora_ci_extension.dll',
-                        './sdk/dll/libagora_dav1d_extension.dll',
-                        './sdk/dll/libagora_fd_extension.dll',
-                        './sdk/dll/libagora_fdkaac.dll',
-                        './sdk/dll/libagora_full_audio_format_extension.dll',
-                        './sdk/dll/libagora_mpg123.dll',
-                        './sdk/dll/libagora_segmentation_extension.dll',
-                        './sdk/dll/libagora_spatial_audio_extension.dll',
-                        './sdk/dll/libagora_video_process_extension.dll',
-                        './sdk/dll/libhwcodec.dll',
+                        './sdk/lib/win/x64/dll/agora_rtc_sdk.dll',
+                        './sdk/lib/win/x64/dll/av1.dll',
+                        './sdk/lib/win/x64/dll/libagora-core.dll',
+                        './sdk/lib/win/x64/dll/libagora-ffmpeg.dll',
+                        './sdk/lib/win/x64/dll/libagora-soundtouch.dll',
+                        './sdk/lib/win/x64/dll/libagora-wgc.dll',
+                        './sdk/lib/win/x64/dll/libagora_ai_denoise_extension.dll',
+                        './sdk/lib/win/x64/dll/libagora_ci_extension.dll',
+                        './sdk/lib/win/x64/dll/libagora_dav1d_extension.dll',
+                        './sdk/lib/win/x64/dll/libagora_fd_extension.dll',
+                        './sdk/lib/win/x64/dll/libagora_fdkaac.dll',
+                        './sdk/lib/win/x64/dll/libagora_full_audio_format_extension.dll',
+                        './sdk/lib/win/x64/dll/libagora_mpg123.dll',
+                        './sdk/lib/win/x64/dll/libagora_segmentation_extension.dll',
+                        './sdk/lib/win/x64/dll/libagora_spatial_audio_extension.dll',
+                        './sdk/lib/win/x64/dll/libagora_video_process_extension.dll',
+                        './sdk/lib/win/x64/dll/libhwcodec.dll',
                     ]
                 }],
                 'library_dirs': [
-                    './sdk/lib',
+                    './sdk/lib/win/x64/lib',
                 ],
                 'link_settings': {
                     'libraries': [
