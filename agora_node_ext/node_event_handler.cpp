@@ -1868,7 +1868,7 @@ void NodeEventHandler::onWlAccStats(WlAccStats currentStats,
         NODE_SET_OBJ_PROP_NUMBER(obj1, "e2eDelayPercent", currentStats.e2eDelayPercent);
         NODE_SET_OBJ_PROP_NUMBER(obj1, "frozenRatioPercent", currentStats.frozenRatioPercent);
         NODE_SET_OBJ_PROP_NUMBER(obj1, "lossRatePercent", currentStats.lossRatePercent);
-        
+
         NODE_SET_OBJ_PROP_NUMBER(obj2, "e2eDelayPercent", averageStats.e2eDelayPercent);
         NODE_SET_OBJ_PROP_NUMBER(obj2, "frozenRatioPercent", averageStats.frozenRatioPercent);
         NODE_SET_OBJ_PROP_NUMBER(obj2, "lossRatePercent", averageStats.lossRatePercent);
@@ -1901,6 +1901,72 @@ void NodeEventHandler::onProxyConnected(const char *channel, uid_t uid,
                        uid, uid, int32, proxyType, string,
                        localProxyIpStr.c_str(), int32, elapsed);
       });
+}
+
+void NodeEventHandler::OnError(std::string device_id,
+                                       seax::ERR_CODE err_code) {
+  FUNC_TRACE;
+  node_async_call::async_call([this, device_id, err_code] {
+    MAKE_JS_CALL_2(SEAX_EVENT_ON_ERROR, string, device_id.c_str(), int32,
+                   static_cast<int>(err_code));
+  });
+}
+
+void NodeEventHandler::OnStateMsgUpdate(char* state_msg, int len) {
+  FUNC_TRACE;
+  std::string stateMsg(state_msg, len);
+  node_async_call::async_call([this, stateMsg] {
+    MAKE_JS_CALL_1(SEAX_EVENT_ON_STATE, string, stateMsg.c_str());
+  });
+}
+
+/*
+ * @brief Triggered after confirmed device role
+ * @param device_id : device Id
+ * @param role :  0: client;  1: host
+ */
+void NodeEventHandler::OnDeviceRoleConfirmed(
+    const std::string& device_id, uint32_t local_uid, uint32_t host_uid,
+    int32_t role) {
+  FUNC_TRACE;
+  node_async_call::async_call([this, device_id, local_uid, host_uid, role] {
+    MAKE_JS_CALL_4(SEAX_EVENT_ON_ROLE_CONFIRMED, string, device_id.c_str(),
+                   uint32, local_uid, uint32, host_uid, int32, role);
+  });
+}
+
+/*
+ * @brief Triggered after received device list from server device role
+ * @param dev_list : lastest device list
+ */
+void NodeEventHandler::OnUpdateDevList(
+    const std::list<seax::DeviceInfo>& dev_list) {
+  FUNC_TRACE;
+
+  auto it = m_callbacks.find(SEAX_EVENT_ON_DEVICE_LIST_UPDATED);
+  if (it != m_callbacks.end()) {
+    Isolate* isolate = Isolate::GetCurrent();
+    HandleScope scope(isolate);
+    Local<Context> context = isolate->GetCurrentContext();
+    Local<v8::Array> arrDevice = v8::Array::New(isolate, dev_list.size());
+
+    int index = 0;
+    for (auto& device : dev_list) {
+      Local<Object> obj = Object::New(isolate);
+      NODE_SET_OBJ_PROP_STRING(obj, "id", device.device_id.c_str());
+      NODE_SET_OBJ_PROP_NUMBER(obj, "role", device.device_role);
+      NODE_SET_OBJ_PROP_STRING(obj, "channel", device.channel_id.c_str());
+      NODE_SET_OBJ_PROP_UINT32(obj, "uid", device.local_uid);
+      NODE_SET_OBJ_PROP_UINT32(obj, "hostUid", device.host_uid);
+
+      arrDevice->Set(context, index, obj);
+      index++;
+    }
+    
+    Local<Value> argv[1]{arrDevice};
+    NodeEventCallback& cb = *it->second;
+    cb.callback.Get(isolate)->Call(context, cb.js_this.Get(isolate), 1, argv);
+  }
 }
 
 } // namespace rtc

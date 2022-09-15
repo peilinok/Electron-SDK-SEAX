@@ -23,6 +23,7 @@
 #include "IAgoraMediaEngine.h"
 #include "IAgoraRtcChannel.h"
 #include "IAgoraRtcEngine.h"
+#include "IAgoraSeaxEngine.h"
 #include "agora_video_source.h"
 #include "node_channel_event_handler.h"
 #include "node_event_handler.h"
@@ -395,7 +396,7 @@ class NodeRtcEngine : public node::ObjectWrap {
    */
   NAPI_API(enableVirtualBackground);
   NAPI_API(virtualBackgroundSourceEnabled);
-  
+
   /*
    * 3.5.1
    */
@@ -450,7 +451,7 @@ class NodeRtcEngine : public node::ObjectWrap {
   NAPI_API(setLocalAccessPoint);
   NAPI_API(videoSourceSetLocalAccessPoint);
   NAPI_API(sendStreamMessageWithArrayBuffer);
-  
+
   /*
   * 3.7.0
   */
@@ -458,10 +459,18 @@ class NodeRtcEngine : public node::ObjectWrap {
   NAPI_API(enableLocalVoicePitchCallback);
   NAPI_API(enableWirelessAccelerate);
   NAPI_API(enableContentInspect);
-  
+
   NAPI_API(enableSpatialAudio);
   NAPI_API(setRemoteUserSpatialAudioParams);
   NAPI_API(videoSourceSetScreenCaptureScenario);
+
+  /**
+   * SeaxEngine
+   */
+  NAPI_API(isSeaxJoined);
+  NAPI_API(getAllSeaxDeviceList);
+  NAPI_API(enableSeaxAudioDump);
+
  public:
   Isolate* getIsolate() { return m_isolate; }
   IRtcEngine* getRtcEngine() { return m_engine; }
@@ -472,11 +481,21 @@ class NodeRtcEngine : public node::ObjectWrap {
   NodeRtcEngine(Isolate* isolate);
   ~NodeRtcEngine();
 
+  void initializeSeax(std::string channel_name, uid_t uid,
+                      ChannelMediaOptions& options);
+  void uninitializeSeax();
+
  private:
   DECLARE_CLASS;
   IRtcEngine* m_engine = nullptr;
   Isolate* m_isolate = nullptr;
   std::unique_ptr<IExternalVideoRenderFactory> m_externalVideoRenderFactory;
+
+  bool m_seax_enabled = false;
+  std::string m_log_path;
+  seax::IAgoraSeaxEngine* m_seax_engine = nullptr;
+  media::IMediaEngine* m_media_engine = nullptr;
+  IAudioDeviceManager* m_audio_device = nullptr;
 
   /**
    * Currently we only support one video source. This maybe changed if more
@@ -573,7 +592,7 @@ class NodeRtcChannel : public node::ObjectWrap {
   DECLARE_CLASS;
   IChannel* m_channel;
   Isolate* m_isolate;
-  
+
   std::unique_ptr<NodeMetadataObserver> metadataObserver;
 };
 

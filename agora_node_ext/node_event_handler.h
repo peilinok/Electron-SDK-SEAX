@@ -15,6 +15,7 @@
 #include <string>
 #include <unordered_map>
 #include "IAgoraRtcEngine.h"
+#include "IAgoraSeaxEngine.h"
 #include "agora_node_ext.h"
 #include "agora_video_source.h"
 #include "node_napi_api.h"
@@ -140,10 +141,18 @@ namespace rtc {
 #define RTC_EVENT_CONTENT_INSPECT_RESULT "contentInspectResult"
 #define RTC_EVENT_PROXY_CONNECTED "proxyConnected"
 
+// Seax engine events
+#define SEAX_EVENT_ON_ERROR "seaxError"
+#define SEAX_EVENT_ON_STATE "seaxState"
+#define SEAX_EVENT_ON_ROLE_CONFIRMED "seaxRoleConfirmed"
+#define SEAX_EVENT_ON_DEVICE_LIST_UPDATED "seaxDeviceListUpdated"
+
+
 class NodeRtcEngine;
 class NodeUid;
 class NodeEventHandler : public IRtcEngineEventHandler,
-                         public IAgoraVideoSourceEventHandler {
+                         public IAgoraVideoSourceEventHandler,
+                         public seax::IAgoraSeaxEngineEventHandler {
  public:
   struct NodeEventCallback {
     Persistent<Function> callback;
@@ -385,7 +394,27 @@ class NodeEventHandler : public IRtcEngineEventHandler,
   virtual void onProxyConnected(const char *channel, uid_t uid,
                                 PROXY_TYPE proxyType, const char *localProxyIp,
                                 int elapsed) override;
-  ;
+
+  // Seax engine events
+  virtual void OnError(std::string device_id, seax::ERR_CODE err_code) override;
+
+  virtual void OnStateMsgUpdate(char* state_msg, int len) override;
+
+  /*
+   * @brief Triggered after confirmed device role
+   * @param device_id : device Id
+   * @param role :  0: client;  1: host
+   */
+  virtual void OnDeviceRoleConfirmed(const std::string& device_id,
+                                     uint32_t local_uid, uint32_t host_uid,
+                                     int32_t role) override;
+
+
+  /*
+   * @brief Triggered after received device list from server device role
+   * @param dev_list : lastest device list
+   */
+  virtual void OnUpdateDevList(const std::list<seax::DeviceInfo>& dev_list) override;
 
 private:
   void onJoinChannelSuccess_node(const char* channel, uid_t uid, int elapsed);

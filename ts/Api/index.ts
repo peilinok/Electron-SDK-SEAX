@@ -89,6 +89,7 @@ import {
   AUDIO_RECORDING_POSITION,
   SpatialAudioParams,
   UInt8ArrayBuffer,
+  SeaxDeviceInfo,
 } from './native_type';
 import { EventEmitter } from 'events';
 import { deprecate, config, Config } from '../Utils';
@@ -997,6 +998,32 @@ class AgoraRtcEngine extends EventEmitter {
       if (!self.pauseRender) {
         self.onRegisterDeliverFrame(infos);
       }
+    });
+
+    this.rtcEngine.onEvent('seaxError', function(
+      deviceId: string,
+      code: number
+    ) {
+      fire('seaxError', deviceId, code);
+    });
+
+    this.rtcEngine.onEvent('seaxState', function(deviceMsg: string) {
+      fire('seaxState', deviceMsg);
+    });
+
+    this.rtcEngine.onEvent('seaxRoleConfirmed', function(
+      deviceId: string,
+      localUid: number,
+      hostUid: number,
+      role: number
+    ) {
+      fire('seaxRoleConfirmed', deviceId, localUid, hostUid, role);
+    });
+
+    this.rtcEngine.onEvent('seaxDeviceListUpdated', function(
+      deviceList: SeaxDeviceInfo[]
+    ) {
+      fire('seaxDeviceListUpdated', deviceList);
     });
   } //TODO(input)
 
@@ -7000,7 +7027,9 @@ class AgoraRtcEngine extends EventEmitter {
   setScreenCaptureScenario(screenScenario: SCREEN_SCENARIO_TYPE): number {
     return this.rtcEngine.setScreenCaptureScenario(screenScenario);
   }
-  videoSourceSetScreenCaptureScenario(screenScenario: SCREEN_SCENARIO_TYPE): number {
+  videoSourceSetScreenCaptureScenario(
+    screenScenario: SCREEN_SCENARIO_TYPE
+  ): number {
     return this.rtcEngine.videoSourceSetScreenCaptureScenario(screenScenario);
   }
 
@@ -7069,6 +7098,29 @@ class AgoraRtcEngine extends EventEmitter {
     buffer: UInt8ArrayBuffer
   ): number {
     return this.rtcEngine.sendStreamMessageWithArrayBuffer(streamId, buffer);
+  }
+
+  /**
+   * Is seax engine joined channel.
+   */
+  isSeaxJoined(): boolean {
+    return this.rtcEngine.isSeaxJoined();
+  }
+
+  /**
+   * Get all seax device list.
+   */
+  getAllSeaxDeviceList(): SeaxDeviceInfo[] {
+    return this.rtcEngine.getAllSeaxDeviceList();
+  }
+
+  /**
+   * Enable or disable seax engine audio dump.
+   * @param path
+   * @param enable
+   */
+  enableSeaxAudioDump(path: string, enable: boolean): void {
+    this.rtcEngine.enableSeaxAudioDump(path, enable);
   }
 }
 /** The AgoraRtcEngine interface. */
@@ -8564,6 +8616,12 @@ on(
       vdata: Uint8Array;
     }) => void
   ): this;
+
+  on(evt:'seaxError',cb: (deviceId: string, code: number) => void): this;
+  on(evt:'seaxState',cb: (stateMsg: string) => void): this;
+  on(evt:'seaxRoleConfirmed',cb: (deviceId: string, localUid: number, hostUid: number, role: number) => void): this;
+  on(evt:'seaxDeviceListUpdated',cb: (DeviceInfoList: SeaxDeviceInfo[]) => void): this;
+
   on(evt: string, listener: Function): this;
 }
 

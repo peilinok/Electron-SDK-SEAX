@@ -215,7 +215,7 @@ getLiveTranscoding(Local<Object> &obj,
         napi_get_object_property_int32_(isolate, watermarkObj, key,
                                         wkImages[i].zOrder);
         CHECK_NAPI_STATUS_PARAM(pEngine, status, key);
-          
+
         key = "alpha";
         napi_get_object_property_double_(isolate, watermarkObj, key,
                                         wkImages[i].alpha);
@@ -272,12 +272,12 @@ getLiveTranscoding(Local<Object> &obj,
         napi_get_object_property_int32_(isolate, advancedFeatureObj, key,
                                         bgImages[i].height);
         CHECK_NAPI_STATUS_PARAM(pEngine, status, key);
-        
+
         key = "zOrder";
         napi_get_object_property_int32_(isolate, advancedFeatureObj, key,
                                         bgImages[i].zOrder);
         CHECK_NAPI_STATUS_PARAM(pEngine, status, key);
-            
+
         key = "alpha";
         napi_get_object_property_double_(isolate, advancedFeatureObj, key,
                                         bgImages[i].alpha);
@@ -689,10 +689,10 @@ void NodeRtcEngine::Init(Local<Object>& module) {
   PROPERTY_METHOD_DEFINE(setColorEnhanceOptions);
   PROPERTY_METHOD_DEFINE(setVideoDenoiserOptions);
   PROPERTY_METHOD_DEFINE(startEchoTestWithConfig)
-  
+
   PROPERTY_METHOD_DEFINE(setLocalAccessPoint);
   PROPERTY_METHOD_DEFINE(videoSourceSetLocalAccessPoint);
-  
+
   /*
   * 3.7.0
   */
@@ -702,10 +702,18 @@ void NodeRtcEngine::Init(Local<Object>& module) {
   PROPERTY_METHOD_DEFINE(enableContentInspect);
   PROPERTY_METHOD_DEFINE(enableSpatialAudio);
   PROPERTY_METHOD_DEFINE(setRemoteUserSpatialAudioParams);
-  
+
   PROPERTY_METHOD_DEFINE(sendStreamMessageWithArrayBuffer);
   PROPERTY_METHOD_DEFINE(videoSourceSetScreenCaptureScenario);
+
+  /**
+   * SeaxEngine
+   */
+  PROPERTY_METHOD_DEFINE(isSeaxJoined);
+  PROPERTY_METHOD_DEFINE(getAllSeaxDeviceList);
+  PROPERTY_METHOD_DEFINE(enableSeaxAudioDump);
   EN_PROPERTY_DEFINE()
+
   module->Set(context, Nan::New<v8::String>("NodeRtcEngine").ToLocalChecked(),
               tpl->GetFunction(context).ToLocalChecked());
 }
@@ -781,6 +789,72 @@ NodeRtcEngine::~NodeRtcEngine() {
 void NodeRtcEngine::destroyVideoSource() {
   if (m_videoSourceSink.get())
     m_videoSourceSink->release();
+}
+
+void NodeRtcEngine::initializeSeax(std::string channel_name, uid_t uid,
+                                   ChannelMediaOptions& options) {
+  bool ret = false;
+  do {
+    int result = agora::ERR_OK;
+
+    if (!m_seax_engine) {
+      m_seax_engine = AgoraSeaxEngineCreate();
+
+      seax::IAgoraSeaxEngineInitParam seax_params;
+      if ((result = m_engine->queryInterface(AGORA_IID_MEDIA_ENGINE,
+                                             (void**)&m_media_engine)) !=
+          agora::ERR_OK) {
+        LOG_ERROR(
+            "query media engine failed "
+            "with error :%d\n",
+            result);
+        break;
+      }
+
+      if ((result = m_engine->queryInterface(AGORA_IID_AUDIO_DEVICE_MANAGER,
+                                             (void**)(&m_audio_device))) !=
+          agora::ERR_OK) {
+        LOG_ERROR("query audio device manager failed with error :%d\n", result);
+        break;
+      }
+
+      seax_params.rtc_engine = m_engine;
+      seax_params.media_engine = m_media_engine;
+      seax_params.audio_device = m_audio_device;
+      seax_params.event_handler = m_eventHandler.get();
+      seax_params.seax_log_dir =
+          m_log_path.empty() ? nullptr : m_log_path.c_str();
+      if ((result = m_seax_engine->Initialize(seax_params)) != agora::ERR_OK) {
+        LOG_ERROR("initialize seax engine failed with error :%d\n", result);
+        break;
+      }
+    }
+
+    if (!m_seax_engine->IsJoinedChannel() &&
+        (result = m_seax_engine->JoinChannel(channel_name, uid, options)) !=
+            agora::ERR_OK) {
+      LOG_ERROR("join seax channel failed with error :%d\n", result);
+      break;
+    }
+
+    ret = true;
+  } while (0);
+
+  if (!ret) uninitializeSeax();
+}
+
+void NodeRtcEngine::uninitializeSeax() {
+  if(!m_seax_engine) return;
+
+  if (m_seax_engine->IsJoinedChannel()) m_seax_engine->LeaveChannel();
+
+  m_seax_engine->Uninitialize();
+  AgoraSeaxEngineDestroy(m_seax_engine);
+
+  m_seax_engine = nullptr;
+  m_media_engine = nullptr;
+  m_audio_device = nullptr;
+  m_seax_enabled = false;
 }
 
 NAPI_API_DEFINE_WRAPPER_PARAM_0(startEchoTest);
@@ -1175,7 +1249,7 @@ NAPI_API_DEFINE(NodeRtcEngine, enableSoundPositionIndication) {
   do {
     NodeRtcEngine* pEngine = nullptr;
     napi_get_native_this(args, pEngine);
-    CHECK_NATIVE_THIS(pEngine); 
+    CHECK_NATIVE_THIS(pEngine);
 
     bool enabled;
     status = napi_get_value_bool_(args[0], enabled);
@@ -1361,7 +1435,7 @@ NAPI_API_DEFINE(NodeRtcEngine, setLocalAccessPoint) {
   LOG_ENTER;
   napi_status status = napi_ok;
   int result = -1;
-  
+
   do {
     Isolate *isolate = args.GetIsolate();
     Local<Context> context = isolate->GetCurrentContext();
@@ -1377,7 +1451,7 @@ NAPI_API_DEFINE(NodeRtcEngine, setLocalAccessPoint) {
     CHECK_NAPI_STATUS(pEngine, status);
 
     LocalAccessPointConfiguration localAccessPointConfiguration;
-    
+
     v8::Array *ipList;
     v8::Array *domainList;
     std::vector<const char *> ipListVec;
@@ -1404,7 +1478,7 @@ NAPI_API_DEFINE(NodeRtcEngine, setLocalAccessPoint) {
       localAccessPointConfiguration.ipList = ipListVec.data();
       localAccessPointConfiguration.ipListSize = count;
     }
-    
+
     status = napi_get_object_property_array_(isolate, obj, "domainList", domainList);
     if (status == napi_ok && domainList->Length() > 0) {
       auto count = domainList->Length();
@@ -1424,17 +1498,17 @@ NAPI_API_DEFINE(NodeRtcEngine, setLocalAccessPoint) {
       localAccessPointConfiguration.domainList = domainListVec.data();
       localAccessPointConfiguration.domainListSize = count;
     }
-    
+
     NodeString verifyDomainNameStr;
     status = napi_get_object_property_nodestring_(isolate, obj, "verifyDomainName", verifyDomainNameStr);
     CHECK_NAPI_STATUS(pEngine, status);
     localAccessPointConfiguration.verifyDomainName = verifyDomainNameStr;
-    
+
     int32_t mode;
     status = napi_get_object_property_int32_(isolate, obj, "mode", mode);
     CHECK_NAPI_STATUS(pEngine, status);
     localAccessPointConfiguration.mode = (LOCAL_PROXY_MODE)mode;
-    
+
     result = pEngine->m_engine->setLocalAccessPoint(localAccessPointConfiguration);
   } while (false);
   napi_set_int_result(args, result);
@@ -1959,7 +2033,7 @@ NAPI_API_DEFINE(NodeRtcEngine, setExternalAudioSource) {
     NodeRtcEngine* pEngine = nullptr;
     napi_get_native_this(args, pEngine);
     CHECK_NATIVE_THIS(pEngine);
-    
+
     int sampleRate, channels;
     bool enabled;
     status = napi_get_value_bool_(args[0], enabled);
@@ -2006,7 +2080,7 @@ NAPI_API_DEFINE(NodeRtcEngine, enableLoopbackRecording) {
     CHECK_NAPI_STATUS(pEngine, status);
     if (!args[1]->IsNull()) {
       status = napi_get_value_nodestring_(args[1], deviceName);
-      CHECK_NAPI_STATUS(pEngine, status); 
+      CHECK_NAPI_STATUS(pEngine, status);
       result = pEngine->m_engine->enableLoopbackRecording(enable, deviceName);
     } else {
       result = pEngine->m_engine->enableLoopbackRecording(enable);
@@ -3331,7 +3405,11 @@ NAPI_API_DEFINE(NodeRtcEngine, leaveChannel) {
     NodeRtcEngine* pEngine = nullptr;
     napi_get_native_this(args, pEngine);
     CHECK_NATIVE_THIS(pEngine);
+
     result = pEngine->m_engine->leaveChannel();
+
+    if (pEngine->m_seax_enabled) pEngine->uninitializeSeax();
+
   } while (false);
   napi_set_int_result(args, result);
   LOG_LEAVE;
@@ -3419,6 +3497,7 @@ NAPI_API_DEFINE(NodeRtcEngine, initialize) {
                                                     "filePath", logPath);
       if (status == napi_ok) {
         logConfig.filePath = logPath;
+        pEngine->m_log_path = logPath;
         LOG_INFO("log config: file path %s", logConfig.filePath);
       } else {
         LOG_WARNING("log config: no file path found");
@@ -3444,13 +3523,14 @@ NAPI_API_DEFINE(NodeRtcEngine, initialize) {
       LOG_ERROR("Rtc engine initialize failed with error :%d\n", suc);
       break;
     }
-    agora::util::AutoPtr<agora::media::IMediaEngine> pMediaEngine;
 
+    agora::util::AutoPtr<agora::media::IMediaEngine> pMediaEngine;
     pMediaEngine.queryInterface(pEngine->m_engine, AGORA_IID_MEDIA_ENGINE);
     if (pMediaEngine) {
       pMediaEngine->registerVideoRenderFactory(
           pEngine->m_externalVideoRenderFactory.get());
     }
+
     IRtcEngine3* m_engine2 = (IRtcEngine3*)pEngine->m_engine;
     m_engine2->setAppType(AppType(3));
     pEngine->m_engine->enableVideo();
@@ -3586,6 +3666,15 @@ NAPI_API_DEFINE(NodeRtcEngine, joinChannel) {
                                               "publishLocalVideo",
                                               options.publishLocalVideo);
       CHECK_NAPI_STATUS(pEngine, status);
+
+      status = napi_get_object_property_bool_(
+          isolate, oChannelMediaOptions, "enableSeax", pEngine->m_seax_enabled);
+      CHECK_NAPI_STATUS(pEngine, status);
+
+      // enable seax engine
+      if (pEngine->m_seax_enabled)
+        pEngine->initializeSeax((const char*)name, uid, options);
+
       result = pEngine->m_engine->joinChannel(key, name, extra_info.c_str(),
                                               uid, options);
     } else {
@@ -4252,6 +4341,7 @@ NAPI_API_DEFINE(NodeRtcEngine, release) {
       // delete[] m_videoVdm;
       pEngine->m_videoVdm = nullptr;
     }
+    pEngine->uninitializeSeax();
     if (pEngine->m_engine) {
       pEngine->m_engine->release(sync);
       pEngine->m_engine = nullptr;
@@ -4282,7 +4372,7 @@ NAPI_API_DEFINE(NodeRtcEngine, muteRemoteVideoStream) {
     status = napi_get_value_bool_(args[1], mute);
     CHECK_NAPI_STATUS(pEngine, status);
 
-    
+
     result = pEngine->m_engine->muteRemoteVideoStream(uid, mute);
   } while (false);
   napi_set_int_result(args, result);
@@ -7096,7 +7186,7 @@ NAPI_API_DEFINE(NodeRtcEngine, enableVirtualBackground) {
     status = napi_get_object_property_uint32_(isolate, obj, "color",
                                               backgroundSource.color);
     CHECK_NAPI_STATUS(pEngine, status);
-      
+
     int blur_degree = VirtualBackgroundSource::BLUR_DEGREE_HIGH;
     status = napi_get_object_property_int32_(isolate, obj, "blur_degree", blur_degree);
     backgroundSource.blur_degree = (VirtualBackgroundSource::BACKGROUND_BLUR_DEGREE)blur_degree;
@@ -7173,7 +7263,7 @@ NAPI_API_DEFINE(NodeRtcEngine, getAudioFileInfo) {
   int result = -1;
   napi_status status = napi_ok;
   do {
-    
+
     NodeRtcEngine* pEngine = nullptr;
     napi_get_native_this(args, pEngine);
     CHECK_NATIVE_THIS(pEngine);
@@ -8165,6 +8255,85 @@ NAPI_API_DEFINE(NodeRtcEngine, setRemoteUserSpatialAudioParams) {
     result = pEngine->m_engine->setRemoteUserSpatialAudioParams(uid, params);
   } while (false);
   napi_set_int_result(args, result);
+  LOG_LEAVE;
+}
+
+NAPI_API_DEFINE(NodeRtcEngine, isSeaxJoined) {
+  LOG_ENTER;
+  int result = 0;
+  do {
+    Isolate* isolate = args.GetIsolate();
+    NodeRtcEngine* pEngine = nullptr;
+    napi_get_native_this(args, pEngine);
+    CHECK_NATIVE_THIS(pEngine);
+
+    if (pEngine->m_seax_engine)
+      result = pEngine->m_seax_engine->IsJoinedChannel();
+  } while (false);
+  napi_set_int_result(args, result);
+  LOG_LEAVE;
+}
+
+NAPI_API_DEFINE(NodeRtcEngine, getAllSeaxDeviceList) {
+  LOG_ENTER;
+  Isolate* isolate = args.GetIsolate();
+  NodeRtcEngine* pEngine = nullptr;
+  napi_get_native_this(args, pEngine);
+  Local<v8::Array> arrDevice;
+
+  do {
+    CHECK_NATIVE_THIS(pEngine);
+
+    if (pEngine->m_seax_engine) {
+      HandleScope scope(isolate);
+      Local<Context> context = isolate->GetCurrentContext();
+
+      std::list<seax::DeviceInfo> device_list;
+      int ret = pEngine->m_seax_engine->GetAllDeviceList(device_list);
+      if (ret != agora::ERR_OK)
+        LOG_ERROR("get seax device list failed with %d\r\n", ret);
+
+      arrDevice = v8::Array::New(isolate, device_list.size());
+      int index = 0;
+      for (auto& device : device_list) {
+        Local<Object> obj = Object::New(isolate);
+        NODE_SET_OBJ_PROP_String(isolate, obj, "id", device.device_id.c_str());
+        NODE_SET_OBJ_PROP_Number(isolate, obj, "role", device.device_role);
+        NODE_SET_OBJ_PROP_String(isolate, obj, "channel",
+                                 device.channel_id.c_str());
+        NODE_SET_OBJ_PROP_UINT32(isolate, obj, "uid", device.local_uid);
+        NODE_SET_OBJ_PROP_UINT32(isolate, obj, "hostUid", device.host_uid);
+
+        arrDevice->Set(context, index, obj);
+        index++;
+      }
+    }
+  } while (0);
+
+  napi_set_array_result(args, arrDevice);
+  LOG_LEAVE;
+}
+
+NAPI_API_DEFINE(NodeRtcEngine, enableSeaxAudioDump) {
+  LOG_ENTER;
+  do {
+    Isolate *isolate = args.GetIsolate();
+    NodeRtcEngine* pEngine = nullptr;
+    napi_get_native_this(args, pEngine);
+    CHECK_NATIVE_THIS(pEngine);
+
+    nodestring dumpPath;
+    napi_status status = napi_get_value_nodestring_(args[0], dumpPath);
+    CHECK_NAPI_STATUS(pEngine, status);
+
+    bool enable = false;
+    status = napi_get_value_bool_(args[1], enable);
+    CHECK_NAPI_STATUS(pEngine, status);
+
+    if (pEngine->m_seax_engine)
+      pEngine->m_seax_engine->EnableSeaxAudioDump((const char*)dumpPath, enable);
+
+  } while (false);
   LOG_LEAVE;
 }
 

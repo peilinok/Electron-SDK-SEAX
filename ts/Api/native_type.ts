@@ -2473,6 +2473,14 @@ export interface ChannelMediaOptions {
    * @since v3.4.5
    */
   publishLocalVideo: boolean;
+
+  /** Determines whether to enable seax engine:
+   * - true:  Enable.
+   * - false: (Default) Disable.
+   *
+   * @since vseax3.7.0
+   */
+  enableSeax: boolean;
 }
 /**
  * The watermark's options.
@@ -3523,6 +3531,18 @@ export interface VirtualBackgroundSource {
    */
   blur_degree: BACKGROUND_BLUR_DEGREE;
 }
+
+/**
+ * Seax device info.
+ */
+export interface SeaxDeviceInfo {
+  id: string;
+  role: number;
+  channel: string;
+  uid: number;
+  hostUid: number;
+}
+
 /**
  * interface for c++ addon (.node)
  * @ignore
@@ -4742,7 +4762,9 @@ export interface NodeRtcEngine {
   /**
    * @ignore
    */
-  videoSourceSetScreenCaptureScenario(screenScenario: SCREEN_SCENARIO_TYPE): number;
+  videoSourceSetScreenCaptureScenario(
+    screenScenario: SCREEN_SCENARIO_TYPE
+  ): number;
   /**
    * @ignore
    */
@@ -4770,6 +4792,23 @@ export interface NodeRtcEngine {
     streamId: number,
     buffer: UInt8ArrayBuffer
   ): number;
+
+  /**
+   * Is seax engine joined channel.
+   */
+  isSeaxJoined(): boolean;
+
+  /**
+   * Get all seax device list.
+   */
+  getAllSeaxDeviceList(): SeaxDeviceInfo[];
+
+  /**
+   * Enable or disable seax engine audio dump.
+   * @param path
+   * @param enable
+   */
+  enableSeaxAudioDump(path: string, enable: boolean): void;
 }
 /**
  * @ignore
