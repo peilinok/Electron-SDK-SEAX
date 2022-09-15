@@ -296,9 +296,15 @@
                         '-lagora_rtc_sdk.lib',
                         '-lws2_32.lib',
                         '-lRpcrt4.lib',
-						'-lgdiplus.lib'
+						            '-lgdiplus.lib',
+                        '-lseax_engine.lib',
+                        '-lAgoraCommonAudio.lib',
+                        '-llibagora-core.lib'
                     ]
                 },
+                'defines' : [
+                  'AGORARTC_EXPORT'
+                ],
                 'defines!': [
                 '_USING_V110_SDK71_',
                 '_HAS_EXCEPTIONS=0'
@@ -306,11 +312,12 @@
                 'sources': [
                     './common/node_process_win.cpp',
                     './sdk/include/IAgoraRtcEngine.h',
+                    './sdk/include/IAgoraSeaxEngine.h',
                     './common/libyuv/source/compare_win.cc',
                     './common/libyuv/source/rotate_win.cc',
                     './common/libyuv/source/row_win.cc',
                     './common/libyuv/source/scale_win.cc',
-					'./agora_node_ext/node_screen_window_info_win.cpp',
+					          './agora_node_ext/node_screen_window_info_win.cpp',
                     './agora_node_ext/node_screen_window_info.h',
                     './agora_node_ext/win_enumer.h',
                     './agora_node_ext/win_enumer.cpp'
@@ -347,7 +354,10 @@
             'OS=="mac"',
             {
                 'mac_framework_dirs': [
-                '../sdk/lib/mac'
+                    '../sdk/lib/mac'
+                ],
+                'library_dirs': [
+                    '../sdk/lib/mac',
                 ],
                 'copies': [{
                     'destination': '<(PRODUCT_DIR)',
@@ -387,7 +397,8 @@
                     'AudioToolbox.framework',
                     'CoreAudio.framework',
                     'Foundation.framework',
-                    'AVFoundation.framework'
+                    'AVFoundation.framework',
+                    'libseax_engine.a'
                     ]
                 },
                 'sources': [
@@ -401,7 +412,8 @@
                 ],
                 'include_dirs': [
                 './sdk/lib/mac/AgoraRtcKit.framework/Headers',
-                './extra/internal'
+                './extra/internal',
+                './sdk/include'
                 ],
                 'defines!': [
                     '_NOEXCEPT',
