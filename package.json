@@ -8,7 +8,7 @@
   "scripts": {
     "switch:arch": "just switch:arch",
     "sync:lib": "just sync:lib",
-    "install": "just install",
+    "install": "just install && npm run build:ts",
     "download": "just download",
     "build:node": "just build:node",
     "build:electron": "just build:electron",

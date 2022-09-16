@@ -4,13 +4,17 @@ const path = require('path')
 const fs = require('fs')
 
 // workaround to find executable when install as dependency
-let gyp_path = `${path.resolve(__dirname, '../../node-gyp/bin/node-gyp.js')}`
+let gypPath = require.resolve(path.join('node-gyp', 'bin', 'node-gyp.js'));
 
-if(!fs.existsSync(gyp_path)) {
-  logger.info(`gyp_exec not found at ${gyp_path}, switch`)
-  gyp_path = `${path.resolve(__dirname, '../node_modules/node-gyp/bin/node-gyp.js')}`
+if (!fs.existsSync(gypPath)) {
+  logger.info(`gyp_exec not found at ${gypPath}, switch`);
+  gypPath = `${path.resolve(
+    __dirname,
+    '../node_modules/node-gyp/bin/node-gyp.js'
+  )}`;
 }
-const gyp_exec = `node ${gyp_path}`
+
+const gyp_exec = `node ${gypPath}`
 const agora_node_ext_path = `${path.resolve(__dirname, '../build/Release/agora_node_ext.node')}`
 const video_source_path = `${path.resolve(__dirname, '../build/Release/VideoSource')}`
 
@@ -61,7 +65,7 @@ module.exports = ({
   logger.info("Runtime:", runtime, "\n");
 
   logger.info("Build C++ addon for Agora Electron SDK...\n")
-  
+
   shell.exec(`${gyp_exec} clean`, {silent}, (code, stdout, stderr) => {
     // handle error
     logger.info(`clean done ${stdout}`)
@@ -77,11 +81,11 @@ module.exports = ({
         logger.error(stderr);
         process.exit(1)
       }
-  
+
       if (debug) {
         // handle success
         logger.info('Complete, please go to `/build` and build manually')
-        process.exit(0)  
+        process.exit(0)
       } else {
         shell.exec(`${gyp_exec} build`, {silent}, (code, stdout, stderr) => {
           // handle error
