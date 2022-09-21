@@ -818,12 +818,13 @@ void NodeRtcEngine::initializeSeax(std::string channel_name, uid_t uid,
         break;
       }
 
+      std::string temp_logpath = m_log_path + ".seax.log";
       seax_params.rtc_engine = m_engine;
       seax_params.media_engine = m_media_engine;
       seax_params.audio_device = m_audio_device;
       seax_params.event_handler = m_eventHandler.get();
       seax_params.seax_log_dir =
-          m_log_path.empty() ? nullptr : m_log_path.c_str();
+          m_log_path.empty() ? nullptr : temp_logpath.c_str();
       if ((result = m_seax_engine->Initialize(seax_params)) != agora::ERR_OK) {
         LOG_ERROR("initialize seax engine failed with error :%d\n", result);
         break;

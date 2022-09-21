@@ -1941,32 +1941,34 @@ void NodeEventHandler::OnDeviceRoleConfirmed(
  */
 void NodeEventHandler::OnUpdateDevList(
     const std::list<seax::DeviceInfo>& dev_list) {
-  FUNC_TRACE;
+  node_async_call::async_call([this, dev_list] {
+    FUNC_TRACE;
 
-  auto it = m_callbacks.find(SEAX_EVENT_ON_DEVICE_LIST_UPDATED);
-  if (it != m_callbacks.end()) {
-    Isolate* isolate = Isolate::GetCurrent();
-    HandleScope scope(isolate);
-    Local<Context> context = isolate->GetCurrentContext();
-    Local<v8::Array> arrDevice = v8::Array::New(isolate, dev_list.size());
+    auto it = m_callbacks.find(SEAX_EVENT_ON_DEVICE_LIST_UPDATED);
+    if (it != m_callbacks.end()) {
+      Isolate* isolate = Isolate::GetCurrent();
+      HandleScope scope(isolate);
+      Local<Context> context = isolate->GetCurrentContext();
+      Local<v8::Array> arrDevice = v8::Array::New(isolate, dev_list.size());
 
-    int index = 0;
-    for (auto& device : dev_list) {
-      Local<Object> obj = Object::New(isolate);
-      NODE_SET_OBJ_PROP_STRING(obj, "id", device.device_id.c_str());
-      NODE_SET_OBJ_PROP_NUMBER(obj, "role", device.device_role);
-      NODE_SET_OBJ_PROP_STRING(obj, "channel", device.channel_id.c_str());
-      NODE_SET_OBJ_PROP_UINT32(obj, "uid", device.local_uid);
-      NODE_SET_OBJ_PROP_UINT32(obj, "hostUid", device.host_uid);
+      int index = 0;
+      for (auto& device : dev_list) {
+        Local<Object> obj = Object::New(isolate);
+        NODE_SET_OBJ_PROP_STRING(obj, "id", device.device_id.c_str());
+        NODE_SET_OBJ_PROP_UID(obj, "role", device.device_role);
+        NODE_SET_OBJ_PROP_STRING(obj, "channel", device.channel_id.c_str());
+        NODE_SET_OBJ_PROP_UINT32(obj, "uid", device.local_uid);
+        NODE_SET_OBJ_PROP_UINT32(obj, "hostUid", device.host_uid);
 
-      arrDevice->Set(context, index, obj);
-      index++;
+        arrDevice->Set(context, index, obj);
+        index++;
+      }
+
+      Local<Value> argv[1]{arrDevice};
+      NodeEventCallback& cb = *it->second;
+      cb.callback.Get(isolate)->Call(context, cb.js_this.Get(isolate), 1, argv);
     }
-    
-    Local<Value> argv[1]{arrDevice};
-    NodeEventCallback& cb = *it->second;
-    cb.callback.Get(isolate)->Call(context, cb.js_this.Get(isolate), 1, argv);
-  }
+  });
 }
 
 } // namespace rtc
