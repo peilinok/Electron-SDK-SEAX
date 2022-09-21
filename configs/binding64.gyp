@@ -137,13 +137,19 @@
                     'libraries': [
                     'libresolv.9.dylib',
                     'Accelerate.framework',
-                    'AgoraRtcKit.framework',
+                    'AgoraAIDenoiseExtension.framework',
+                    'AgoraCIExtension.framework',
+                    'AgoraCore.framework',
+                    'AgoraDav1dExtension.framework',
+                    'AgoraFDExtension.framework',
                     'Agorafdkaac.framework',
                     'Agoraffmpeg.framework',
+                    'AgoraFullAudioFormatExtension.framework',
+                    'AgoraRtcKit.framework',
                     'AgoraSoundTouch.framework',
+                    'AgoraSpatialAudioExtension.framework',
                     'AgoraVideoProcessExtension.framework',
-                    'AgoraCore.framework',
-                    'AgoraAIDenoiseExtension.framework',
+                    'AgoraVideoSegmentationExtension.framework',
                     'av1.framework',
                     'CoreWLAN.framework',
                     'Cocoa.framework',
@@ -186,7 +192,8 @@
                     'FRAMEWORK_SEARCH_PATHS': [
                     './sdk/lib/mac'
                     ],
-                    "DEBUG_INFORMATION_FORMAT": "dwarf-with-dsym"
+                    "DEBUG_INFORMATION_FORMAT": "dwarf-with-dsym",
+                    'OTHER_LDFLAGS': [ '-Wl,-rpath,@loader_path']
                 },
 
             }
@@ -362,27 +369,39 @@
                 'copies': [{
                     'destination': '<(PRODUCT_DIR)',
                     'files': [
-                        './sdk/lib/mac/AgoraRtcKit.framework',
+                        './sdk/lib/mac/AgoraAIDenoiseExtension.framework',
+                        './sdk/lib/mac/AgoraCIExtension.framework',
+                        './sdk/lib/mac/AgoraCore.framework',
+                        './sdk/lib/mac/AgoraDav1dExtension.framework',
+                        './sdk/lib/mac/AgoraFDExtension.framework',
                         './sdk/lib/mac/Agorafdkaac.framework',
                         './sdk/lib/mac/Agoraffmpeg.framework',
+                        './sdk/lib/mac/AgoraFullAudioFormatExtension.framework',
+                        './sdk/lib/mac/AgoraRtcKit.framework',
                         './sdk/lib/mac/AgoraSoundTouch.framework',
-                        './sdk/lib/mac/AgoraCore.framework',
-                        './sdk/lib/mac/av1.framework',
-                        './sdk/lib/mac/AgoraAIDenoiseExtension.framework',
+                        './sdk/lib/mac/AgoraSpatialAudioExtension.framework',
                         './sdk/lib/mac/AgoraVideoProcessExtension.framework',
+                        './sdk/lib/mac/AgoraVideoSegmentationExtension.framework',
+                        './sdk/lib/mac/av1.framework',
                     ]
                 }],
                 'link_settings': {
                     'libraries': [
                     'libresolv.9.dylib',
                     'Accelerate.framework',
-                    'AgoraRtcKit.framework',
+                    'AgoraAIDenoiseExtension.framework',
+                    'AgoraCIExtension.framework',
+                    'AgoraCore.framework',
+                    'AgoraDav1dExtension.framework',
+                    'AgoraFDExtension.framework',
                     'Agorafdkaac.framework',
                     'Agoraffmpeg.framework',
+                    'AgoraFullAudioFormatExtension.framework',
+                    'AgoraRtcKit.framework',
                     'AgoraSoundTouch.framework',
+                    'AgoraSpatialAudioExtension.framework',
                     'AgoraVideoProcessExtension.framework',
-                    'AgoraCore.framework',
-                    'AgoraAIDenoiseExtension.framework',
+                    'AgoraVideoSegmentationExtension.framework',
                     'av1.framework',
                     'CoreWLAN.framework',
                     'Cocoa.framework',
@@ -430,7 +449,8 @@
                     'FRAMEWORK_SEARCH_PATHS': [
                     './sdk/lib/mac'
                     ],
-                    "DEBUG_INFORMATION_FORMAT": "dwarf-with-dsym"
+                    "DEBUG_INFORMATION_FORMAT": "dwarf-with-dsym",
+                    'OTHER_LDFLAGS': [ '-Wl,-rpath,@loader_path']
                 },
             }
             ]
