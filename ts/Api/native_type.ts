@@ -4805,7 +4805,7 @@ export interface NodeRtcEngine {
 
   /**
    * Enable or disable seax engine audio dump.
-   * @param path
+   * @param path The folder must exist.
    * @param enable
    */
   enableSeaxAudioDump(path: string, enable: boolean): void;

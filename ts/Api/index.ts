@@ -8617,9 +8617,21 @@ on(
     }) => void
   ): this;
 
+  /**
+   * Occurs when seax engine have error.
+   */
   on(evt:'seaxError',cb: (deviceId: string, code: number) => void): this;
+  /**
+   * Occurs when seax engine state changed.
+   */
   on(evt:'seaxState',cb: (stateMsg: string) => void): this;
+  /**
+   * Occurs when seax engine role have been confirmed.
+   */
   on(evt:'seaxRoleConfirmed',cb: (deviceId: string, localUid: number, hostUid: number, role: number) => void): this;
+  /**
+   * Occurs when device list changed in the same group of seax engine.
+   */
   on(evt:'seaxDeviceListUpdated',cb: (DeviceInfoList: SeaxDeviceInfo[]) => void): this;
 
   on(evt: string, listener: Function): this;
